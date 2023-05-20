@@ -44,6 +44,17 @@ end
 --- Functions
 ---
 
+local function is_safe(pos)
+	for i = 0, 1 do
+		local tpos = vector.new(pos)
+		tpos.y = tpos.y + i
+		if minetest.get_node(tpos).name ~= "air" then
+			return
+		end
+	end
+	return true
+end
+
 local function get_near_televators(pos, which)
 	for i = 1, 32 do
 		local cpos = vector.new(pos)
@@ -56,20 +67,11 @@ local function get_near_televators(pos, which)
 		if (which == "above" and name == "an_televator:televator")
 				or (which == "below" and i ~= 1 and name == "an_televator:televator") then
 			cpos.y = cpos.y + 1
-			return cpos
+			if is_safe(cpos) then
+				return cpos
+			end
 		end
 	end
-end
-
-local function is_safe(pos)
-	for i = 0, 1 do
-		local tpos = vector.new(pos)
-		tpos.y = tpos.y + i
-		if minetest.get_node(tpos).name ~= "air" then
-			return
-		end
-	end
-	return true
 end
 
 ---
@@ -115,7 +117,7 @@ minetest.register_globalstep(function(dtime)
 					where = "below"
 				else return end
 				local epos = get_near_televators(pos, where)
-				if epos and is_safe(epos) then
+				if epos then
 					player:set_pos(epos)
 					minetest.sound_play("televator_whoosh", {
 						gain = 0.75,
