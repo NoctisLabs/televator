@@ -31,6 +31,15 @@ if minetest.get_modpath("default") then
 	}
 end
 
+if minetest.get_modpath("mcl_core") then
+	itemset = {
+		steel = "mcl_core:iron_ingot",
+		gold = "mcl_core:gold_ingot",
+		copper = "mcl_copper:copper_ingot",
+		glass = "mcl_core:glass",
+	}
+end
+
 ---
 --- Functions
 ---
