@@ -55,8 +55,8 @@ local function is_safe(pos)
 	return true
 end
 
-local function get_near_televators(pos, which)
-	for i = 1, 32 do
+local function get_near_televators(pos, which, range)
+	for i = 1, range do
 		local cpos = vector.new(pos)
 		if which == "above" then
 			cpos.y = cpos.y + i
@@ -64,8 +64,8 @@ local function get_near_televators(pos, which)
 			cpos.y = cpos.y - i
 		end
 		local name = minetest.get_node(cpos).name
-		if (which == "above" and name == "an_televator:televator")
-				or (which == "below" and i ~= 1 and name == "an_televator:televator") then
+		if (which == "above" and tostring(name):startswith('an_televator:televator'))
+				or (which == "below" and i ~= 1 and tostring(name):startswith('an_televator:televator')) then
 			cpos.y = cpos.y + 1
 			if is_safe(cpos) then
 				return cpos
@@ -108,7 +108,7 @@ minetest.register_globalstep(function(dtime)
 			delay[name] = delay[name] + dtime
 		end
 		if not delay[name] or delay[name] > 0.5 then
-			if minetest.get_node({x = pos.x, y = pos.y - 0.5, z = pos.z}).name == "an_televator:televator" then
+			if tostring(minetest.get_node({x = pos.x, y = pos.y - 0.5, z = pos.z}).name):startswith('an_televator:televator') then
 				local where
 				local controls = player:get_player_control()
 				if controls.jump then
@@ -116,7 +116,7 @@ minetest.register_globalstep(function(dtime)
 				elseif controls.sneak then
 					where = "below"
 				else return end
-				local epos = get_near_televators(pos, where)
+				local epos = get_near_televators(pos, where, 64)
 				if epos then
 					player:set_pos(epos)
 					minetest.sound_play("televator_whoosh", {
