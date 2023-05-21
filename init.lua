@@ -137,11 +137,11 @@ minetest.register_globalstep(function(dtime)
 				elseif controls.sneak then
 					where = "below"
 				else return end
-				
-				if nodename == 'an_televator:televator' then
-					local epos = get_near_televators(pos, where, 64)
-				elseif nodename == 'an_televator:televator_dia' then
+					
+				if nodename == 'an_televator:televator_dia' then
 					local epos = get_near_televators(pos, where, 256)
+				else
+					local epos = get_near_televators(pos, where, 64)
 				end
 				
 				if epos then
