@@ -81,7 +81,7 @@ end
 minetest.register_node("an_televator:televator", {
 	description = "Televator",
 	tiles = {"televator_televator.png"},
-	groups = {cracky = 2, disable_jump = 1},
+	groups = {cracky = 2, disable_jump = 1, pickaxey= 2 },
 	after_place_node = function(pos)
 		minetest.get_meta(pos):set_string("infotext", "Televator")
 	end,
