@@ -20,6 +20,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 -- an_televator/init.lua
 
+string.startswith = function(self, str) 
+    return self:find('^' .. str) ~= nil
+end
+
 local delay = {}
 local itemset
 if minetest.get_modpath("default") then
