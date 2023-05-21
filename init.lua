@@ -32,6 +32,7 @@ if minetest.get_modpath("default") then
 		gold = "default:gold_ingot",
 		copper = "default:copper_ingot",
 		glass = "default:glass",
+		diamond = "default:diamond",
 	}
 end
 
@@ -41,6 +42,7 @@ if minetest.get_modpath("mcl_core") then
 		gold = "mcl_core:gold_ingot",
 		copper = "mcl_copper:copper_ingot",
 		glass = "mcl_core:glass",
+		diamond = "mcl_core:diamond",
 	}
 end
 
@@ -102,6 +104,24 @@ if itemset then
 	})
 end
 
+minetest.register_node("an_televator:televator_dia", {
+	description = "Diamond televator",
+	tiles = {"televator_televator_dia.png"},
+	groups = {cracky = 2, disable_jump = 1, pickaxey= 2 },
+	end,
+})
+
+if itemset then
+	minetest.register_craft({
+		output = "an_televator:televator_dia",
+		recipe = {
+			{itemset.steel, itemset.diamond, itemset.steel},
+			{itemset.diamond, itemset.gold, itemset.diamond},
+			{itemset.steel, itemset.diamond, itemset.steel,}
+		},
+	})
+end
+
 minetest.register_globalstep(function(dtime)
 	for _, player in pairs(minetest.get_connected_players()) do
 		local pos  = player:get_pos()
@@ -112,7 +132,8 @@ minetest.register_globalstep(function(dtime)
 			delay[name] = delay[name] + dtime
 		end
 		if not delay[name] or delay[name] > 0.5 then
-			if tostring(minetest.get_node({x = pos.x, y = pos.y - 0.5, z = pos.z}).name):startswith('an_televator:televator') then
+			local nodename = tostring(minetest.get_node({x = pos.x, y = pos.y - 0.5, z = pos.z}).name)
+			if nodename:startswith('an_televator:televator') then
 				local where
 				local controls = player:get_player_control()
 				if controls.jump then
@@ -120,7 +141,13 @@ minetest.register_globalstep(function(dtime)
 				elseif controls.sneak then
 					where = "below"
 				else return end
-				local epos = get_near_televators(pos, where, 64)
+				
+				if nodename == 'an_televator:televator' then
+					local epos = get_near_televators(pos, where, 64)
+				elseif nodename == 'an_televator:televator_dia' then
+					local epos = get_near_televators(pos, where, 256)
+				end
+				
 				if epos then
 					player:set_pos(epos)
 					minetest.sound_play("televator_whoosh", {
