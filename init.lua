@@ -20,6 +20,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 -- an_televator/init.lua
 
+string.startswith = function(self, str) 
+    return self:find('^' .. str) ~= nil
+end
+
 local delay = {}
 local itemset
 if minetest.get_modpath("default") then
@@ -28,29 +32,23 @@ if minetest.get_modpath("default") then
 		gold = "default:gold_ingot",
 		copper = "default:copper_ingot",
 		glass = "default:glass",
+		diamond = "default:diamond",
+	}
+end
+
+if minetest.get_modpath("mcl_core") then
+	itemset = {
+		steel = "mcl_core:iron_ingot",
+		gold = "mcl_core:gold_ingot",
+		copper = "mcl_copper:copper_ingot",
+		glass = "mcl_core:glass",
+		diamond = "mcl_core:diamond",
 	}
 end
 
 ---
 --- Functions
 ---
-
-local function get_near_televators(pos, which)
-	for i = 1, 32 do
-		local cpos = vector.new(pos)
-		if which == "above" then
-			cpos.y = cpos.y + i
-		elseif which == "below" then
-			cpos.y = cpos.y - i
-		end
-		local name = minetest.get_node(cpos).name
-		if (which == "above" and name == "an_televator:televator")
-				or (which == "below" and i ~= 1 and name == "an_televator:televator") then
-			cpos.y = cpos.y + 1
-			return cpos
-		end
-	end
-end
 
 local function is_safe(pos)
 	for i = 0, 1 do
@@ -63,6 +61,25 @@ local function is_safe(pos)
 	return true
 end
 
+local function get_near_televators(pos, which, range)
+	for i = 1, range do
+		local cpos = vector.new(pos)
+		if which == "above" then
+			cpos.y = cpos.y + i
+		elseif which == "below" then
+			cpos.y = cpos.y - i
+		end
+		local name = minetest.get_node(cpos).name
+		if (which == "above" and tostring(name):startswith('an_televator:televator'))
+				or (which == "below" and i ~= 1 and tostring(name):startswith('an_televator:televator')) then
+			cpos.y = cpos.y + 1
+			if is_safe(cpos) then
+				return cpos
+			end
+		end
+	end
+end
+
 ---
 --- Registrations
 ---
@@ -70,10 +87,7 @@ end
 minetest.register_node("an_televator:televator", {
 	description = "Televator",
 	tiles = {"televator_televator.png"},
-	groups = {cracky = 2, disable_jump = 1},
-	after_place_node = function(pos)
-		minetest.get_meta(pos):set_string("infotext", "Televator")
-	end,
+	groups = {cracky = 2, disable_jump = 1, pickaxey= 2 },
 })
 
 if itemset then
@@ -83,6 +97,23 @@ if itemset then
 			{itemset.steel, itemset.glass, itemset.steel},
 			{itemset.steel, itemset.gold, itemset.steel},
 			{itemset.steel, itemset.copper, itemset.steel,}
+		},
+	})
+end
+
+minetest.register_node("an_televator:televator_dia", {
+	description = "Diamond televator",
+	tiles = {"televator_televator_dia.png"},
+	groups = {cracky = 2, disable_jump = 1, pickaxey= 2 },
+})
+
+if itemset then
+	minetest.register_craft({
+		output = "an_televator:televator_dia",
+		recipe = {
+			{itemset.steel, itemset.diamond, itemset.steel},
+			{itemset.diamond, itemset.gold, itemset.diamond},
+			{itemset.steel, itemset.diamond, itemset.steel,}
 		},
 	})
 end
@@ -97,7 +128,8 @@ minetest.register_globalstep(function(dtime)
 			delay[name] = delay[name] + dtime
 		end
 		if not delay[name] or delay[name] > 0.5 then
-			if minetest.get_node({x = pos.x, y = pos.y - 0.5, z = pos.z}).name == "an_televator:televator" then
+			local nodename = tostring(minetest.get_node({x = pos.x, y = pos.y - 0.5, z = pos.z}).name)
+			if nodename:startswith('an_televator:televator') then
 				local where
 				local controls = player:get_player_control()
 				if controls.jump then
@@ -105,8 +137,14 @@ minetest.register_globalstep(function(dtime)
 				elseif controls.sneak then
 					where = "below"
 				else return end
-				local epos = get_near_televators(pos, where)
-				if epos and is_safe(epos) then
+				
+				local epos = get_near_televators(pos, where, 64)
+					
+				if nodename == 'an_televator:televator_dia' then
+					epos = get_near_televators(pos, where, 256)
+				end
+				
+				if epos then
 					player:set_pos(epos)
 					minetest.sound_play("televator_whoosh", {
 						gain = 0.75,
